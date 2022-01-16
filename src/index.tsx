@@ -1,6 +1,7 @@
 import * as esbuild from 'esbuild-wasm';
 import { useState, useEffect, useRef } from 'react';
 import ReactDOM from 'react-dom';
+import { unpkgPathPlugin } from './plugins/unpkg-path-plugin';
 
 const App = () => {
   const ref = useRef<any>();
@@ -20,12 +21,20 @@ const App = () => {
 
   const onClickHandler = async () => {
     if (!ref.current) return;
-    const result = await ref.current.transform(input, {
-      loader: 'jsx',
-      target: 'es2015',
+    const result = await ref.current.build({
+      entryPoints: ['index.js'], // be the first one to be bundled in our application
+      bundle: true,
+      write: false,
+      plugins: [unpkgPathPlugin()],
+      define: {
+        'process.env.NODE_ENV': '"production"', // replace 'process.env.NODE_ENV' -> "production" --> string
+        global: 'window',
+      },
     });
 
-    setCode(result.code);
+    // console.log(result);
+
+    setCode(result.outputFiles[0].text);
   };
 
   return (
